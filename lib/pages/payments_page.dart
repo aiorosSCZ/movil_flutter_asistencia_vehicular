@@ -55,22 +55,25 @@ class _PaymentsPageState extends State<PaymentsPage> {
         ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue))
         : _pagos.isEmpty
           ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Spacer(),
-                    Container(
-                      width: 100, height: 100,
-                      decoration: BoxDecoration(color: AppTheme.secondaryGreen.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.receipt_long_rounded, size: 50, color: AppTheme.secondaryGreen),
-                    ),
-                    const SizedBox(height: 24),
-                    Text("Sin pagos recientes", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
-                    const Spacer(flex: 2),
-                  ],
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Spacer(),
+                      Container(
+                        width: 100, height: 100,
+                        decoration: BoxDecoration(color: AppTheme.secondaryGreen.withOpacity(0.1), shape: BoxShape.circle),
+                        child: const Icon(Icons.receipt_long_rounded, size: 50, color: AppTheme.secondaryGreen),
+                      ),
+                      const SizedBox(height: 24),
+                      Text("Sin pagos recientes", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const Spacer(flex: 2),
+                    ],
+                  ),
                 ),
               ),
             )

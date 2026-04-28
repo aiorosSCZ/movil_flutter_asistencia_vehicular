@@ -53,9 +53,9 @@ class ProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 children: [
-                  _buildMenuItem(Icons.lock_outline_rounded, "Cambiar Contraseña"),
-                  _buildMenuItem(Icons.notifications_none_rounded, "Notificaciones"),
-                  _buildMenuItem(Icons.help_outline_rounded, "Soporte y Ayuda"),
+                  _buildMenuItem(context, Icons.lock_outline_rounded, "Cambiar Contraseña"),
+                  _buildMenuItem(context, Icons.notifications_none_rounded, "Notificaciones"),
+                  _buildMenuItem(context, Icons.help_outline_rounded, "Soporte y Ayuda"),
                   
                   const SizedBox(height: 40),
                   
@@ -93,7 +93,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title) {
+  Widget _buildMenuItem(BuildContext context, IconData icon, String title) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -108,7 +108,14 @@ class ProfilePage extends StatelessWidget {
         ),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppTheme.textGray),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        onTap: () {},
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("La función '$title' está en desarrollo."),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
       ),
     );
   }

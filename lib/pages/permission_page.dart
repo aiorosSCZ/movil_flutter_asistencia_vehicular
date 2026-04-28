@@ -99,9 +99,9 @@ class _PermissionPageState extends State<PermissionPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildCircleIcon(Icons.location_on_rounded, AppTheme.primaryBlue),
-                  const SizedBox(width: -10),
+                  const SizedBox(width: 10),
                   _buildCircleIcon(Icons.camera_alt_rounded, AppTheme.accentYellow),
-                  const SizedBox(width: -10),
+                  const SizedBox(width: 10),
                   _buildCircleIcon(Icons.mic_rounded, AppTheme.secondaryGreen),
                 ],
               ),

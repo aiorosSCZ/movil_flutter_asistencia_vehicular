@@ -88,6 +88,9 @@ class _TrackingPageState extends State<TrackingPage> {
   }
 
   void _loadTrackData() {
+    _markers.clear();
+    _polylines.clear();
+
     // Marcador del Cliente
     _markers.add(
       Marker(
@@ -98,25 +101,26 @@ class _TrackingPageState extends State<TrackingPage> {
       ),
     );
 
-    // Marcador del Técnico
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('technician'),
-        position: _technicianPosition,
-        infoWindow: const InfoWindow(title: 'Técnico en camino'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-    );
+    // Solo añadir técnico y ruta si hay un incidente activo
+    if (_idIncidente != null) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('technician'),
+          position: _technicianPosition,
+          infoWindow: const InfoWindow(title: 'Técnico en camino'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
 
-    // Trazar línea de ruta recta (Fallback por si no hay API de Routes activada)
-    _polylines.add(
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: [_currentPosition, _technicianPosition],
-        color: AppTheme.primaryBlue,
-        width: 5,
-      ),
-    );
+      _polylines.add(
+        Polyline(
+          polylineId: const PolylineId('route'),
+          points: [_currentPosition, _technicianPosition],
+          color: AppTheme.primaryBlue,
+          width: 5,
+        ),
+      );
+    }
   }
 
   Future<void> _getUserLocation() async {
@@ -228,20 +232,40 @@ class _TrackingPageState extends State<TrackingPage> {
                 child: ListView(
                   controller: scrollController,
                   padding: const EdgeInsets.all(24),
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(10),
+                  children: _idIncidente == null 
+                    ? [
+                        const SizedBox(height: 40),
+                        Center(child: Icon(Icons.location_off_rounded, size: 64, color: Colors.grey.shade400)),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: Text(
+                            "Sin asistencias activas",
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    Container(
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            "Aquí podrás ver el progreso de tu auxilio vial en tiempo real una vez que lo solicites.",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textGray),
+                          ),
+                        ),
+                      ]
+                    : [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white,

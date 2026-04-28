@@ -47,52 +47,78 @@ class _VehiclesPageState extends State<VehiclesPage> {
     final modeloCtrl = TextEditingController();
     final anoCtrl = TextEditingController();
     final colorCtrl = TextEditingController();
+    String selectedTransmision = "Automático";
+    String selectedCombustible = "Gasolina";
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Añadir Vehículo", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: placaCtrl, decoration: const InputDecoration(labelText: "Placa")),
-              TextField(controller: marcaCtrl, decoration: const InputDecoration(labelText: "Marca")),
-              TextField(controller: modeloCtrl, decoration: const InputDecoration(labelText: "Modelo")),
-              TextField(controller: anoCtrl, decoration: const InputDecoration(labelText: "Año"), keyboardType: TextInputType.number),
-              TextField(controller: colorCtrl, decoration: const InputDecoration(labelText: "Color")),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text("Añadir Vehículo", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: placaCtrl, decoration: const InputDecoration(labelText: "Placa")),
+                TextField(controller: marcaCtrl, decoration: const InputDecoration(labelText: "Marca")),
+                TextField(controller: modeloCtrl, decoration: const InputDecoration(labelText: "Modelo")),
+                TextField(controller: anoCtrl, decoration: const InputDecoration(labelText: "Año"), keyboardType: TextInputType.number),
+                TextField(controller: colorCtrl, decoration: const InputDecoration(labelText: "Color")),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedTransmision,
+                  decoration: const InputDecoration(labelText: "Transmisión"),
+                  items: ["Automático", "Manual"]
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedTransmision = val);
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCombustible,
+                  decoration: const InputDecoration(labelText: "Combustible"),
+                  items: ["Gasolina", "Diésel", "Gas", "Eléctrico", "Híbrido"]
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedCombustible = val);
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar")),
-          ElevatedButton(
-            onPressed: () async {
-              if (placaCtrl.text.isEmpty || marcaCtrl.text.isEmpty || modeloCtrl.text.isEmpty) return;
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-              
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
-              final idCliente = authProvider.user?.id;
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancelar")),
+            ElevatedButton(
+              onPressed: () async {
+                if (placaCtrl.text.isEmpty || marcaCtrl.text.isEmpty || modeloCtrl.text.isEmpty) return;
+                Navigator.pop(ctx);
+                setState(() => _isLoading = true);
+                
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final idCliente = authProvider.user?.id;
 
-              try {
-                await _apiService.registrarVehiculo(idCliente!, {
-                  "placa": placaCtrl.text,
-                  "marca": marcaCtrl.text,
-                  "modelo": modeloCtrl.text,
-                  "año": int.tryParse(anoCtrl.text) ?? 2020,
-                  "color": colorCtrl.text,
-                  "tipo_transmision": "Automático",
-                  "tipo_combustible": "Gasolina"
-                });
-                _fetchVehiculos();
-              } catch (e) {
-                setState(() => _isLoading = false);
-              }
-            },
-            child: const Text("Guardar"),
-          )
-        ],
+                try {
+                  await _apiService.registrarVehiculo(idCliente!, {
+                    "placa": placaCtrl.text,
+                    "marca": marcaCtrl.text,
+                    "modelo": modeloCtrl.text,
+                    "año": int.tryParse(anoCtrl.text) ?? 2020,
+                    "color": colorCtrl.text,
+                    "tipo_transmision": selectedTransmision,
+                    "tipo_combustible": selectedCombustible
+                  });
+                  _fetchVehiculos();
+                } catch (e) {
+                  setState(() => _isLoading = false);
+                }
+              },
+              child: const Text("Guardar"),
+            )
+          ],
+        ),
       ),
     );
   }

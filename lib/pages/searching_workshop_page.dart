@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 
 class SearchingWorkshopPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
   String _urgencia = "Alta";
   bool _argsLoaded = false;
   Timer? _pollingTimer;
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -76,13 +78,11 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
     if (_idIncidente == null) return;
 
     try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8000/api/incidentes/$_idIncidente'),
-      );
+      final response = await _apiService.getIncidente(_idIncidente!);
       
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final estado = data['estado_solicitud'];
+        final data = response.data;
+        final estado = data['estado_solicitud'] ?? data['estado'];
         
         // Si ya fue asignado, cambiar de pantalla
         if (estado == 'Aceptado' || estado == 'Atendido' || estado == 'En Camino') {
