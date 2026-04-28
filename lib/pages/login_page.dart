@@ -281,18 +281,19 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     obscureText: true,
                   ),
                   const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/forgot_password');
-                      },
-                      child: const Text(
-                        "¿Olvidaste tu contraseña?",
-                        style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                  if (_selectedRole == 'Conductor')
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/forgot_password');
+                        },
+                        child: const Text(
+                          "¿Olvidaste tu contraseña?",
+                          style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 32),
