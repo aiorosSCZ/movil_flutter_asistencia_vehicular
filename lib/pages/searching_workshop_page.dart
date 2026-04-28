@@ -91,24 +91,22 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
       }
     }
 
-    await Future.delayed(const Duration(seconds: 4));
     if (mounted) {
       setState(() {
-        _status = "Diagnóstico: Problema de $_categoria detectado.\nPrioridad asignada: $_urgencia";
+        _status = "Diagnóstico: Problema de $_categoria detectado.\nPrioridad asignada: $_urgencia\n\nBuscando y notificando talleres cercanos...";
         _step = 1;
       });
     }
 
-    await Future.delayed(const Duration(seconds: 4));
-    
-    // Pasar INMEDIATAMENTE a la pantalla del mapa (Tracking)
-    if (mounted) {
-      Navigator.pushReplacementNamed(
-        context, 
-        '/tracking',
-        arguments: {'id_incidente': _idIncidente},
-      );
-    }
+    // Iniciar el polling para esperar a que un taller acepte la solicitud
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _checkIncidentStatus();
+    });
   }
 
 
