@@ -18,23 +18,48 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
   bool _loadingLocation = true;
   String _currentState = "Asignado"; // Asignado, En camino, Atendiendo, Finalizado
   final ApiService _apiService = ApiService();
+  bool _argsLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _getUserLocation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_argsLoaded) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        final double? lat = args['lat'];
+        final double? lng = args['lng'];
+        if (lat != null && lng != null) {
+          _clientPosition = LatLng(lat, lng);
+        }
+      }
+      _argsLoaded = true;
+      _getUserLocation();
+    }
   }
 
   Future<void> _getUserLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      if (mounted) {
-        setState(() {
-          _clientPosition = LatLng(position.latitude + 0.01, position.longitude + 0.01); // Un poco alejada
-          _loadingLocation = false;
-        });
+      if (_clientPosition.latitude == -16.5000) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        if (mounted) {
+          setState(() {
+            _clientPosition = LatLng(position.latitude + 0.01, position.longitude + 0.01);
+            _loadingLocation = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _loadingLocation = false;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -97,6 +122,14 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
               ),
               myLocationEnabled: true,
               zoomControlsEnabled: false,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('cliente_pos'),
+                  position: _clientPosition,
+                  infoWindow: InfoWindow(title: "Cliente: $cliente"),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+                )
+              },
               onMapCreated: (controller) {
                 _mapController = controller;
               },
