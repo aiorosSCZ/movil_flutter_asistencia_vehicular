@@ -23,7 +23,7 @@ class _MechanicMainScreenState extends State<MechanicMainScreen> {
     final List<Widget> pages = [
       MechanicHomePage(idTecnico: idTecnico),
       const MechanicHistoryPage(),
-      const MechanicProfilePage(),
+      MechanicProfilePage(idTecnico: idTecnico),
     ];
 
     return Scaffold(

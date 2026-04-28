@@ -4,7 +4,8 @@ import '../theme.dart';
 import '../services/api_service.dart';
 
 class MechanicProfilePage extends StatefulWidget {
-  const MechanicProfilePage({super.key});
+  final int idTecnico;
+  const MechanicProfilePage({super.key, required this.idTecnico});
 
   @override
   State<MechanicProfilePage> createState() => _MechanicProfilePageState();
@@ -14,6 +15,43 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final ApiService _apiService = ApiService();
+  
+  String _nombreCompleto = "Cargando...";
+  String _correo = "...";
+  String _taller = "...";
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final response = await _apiService.getTecnicoPerfil(widget.idTecnico);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (mounted) {
+          setState(() {
+            _nombreCompleto = "${data['nombres']} ${data['apellidos']}";
+            _correo = data['correo'];
+            _taller = data['taller'];
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _nombreCompleto = "Pedro Mendoza (Offline)";
+          _correo = "tecnico@test.com";
+          _taller = "Taller Central";
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -143,7 +181,7 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
             ),
             const SizedBox(height: 24),
             Text(
-              "Pedro Mendoza",
+              _nombreCompleto,
               style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textDark),
             ),
             Text(
@@ -152,9 +190,9 @@ class _MechanicProfilePageState extends State<MechanicProfilePage> {
             ),
             const SizedBox(height: 32),
             
-            _buildProfileItem(Icons.email_rounded, "Correo Electrónico", "tecnico@test.com"),
+            _buildProfileItem(Icons.email_rounded, "Correo Electrónico", _correo),
             const SizedBox(height: 16),
-            _buildProfileItem(Icons.business_rounded, "Taller Asignado", "Taller Central"),
+            _buildProfileItem(Icons.business_rounded, "Taller Asignado", _taller),
             const SizedBox(height: 32),
 
             const SizedBox(height: 16),

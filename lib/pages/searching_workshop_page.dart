@@ -23,10 +23,17 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
   Timer? _pollingTimer;
   final ApiService _apiService = ApiService();
 
+  int? _idCliente;
+  int? _idVehiculo;
+  double? _latitud;
+  double? _longitud;
+  String? _descripcion;
+  String? _audioPath;
+  String? _fotoPath;
+
   @override
   void initState() {
     super.initState();
-    _startRealFlow();
   }
 
   @override
@@ -44,14 +51,47 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
         _idIncidente = args['id_incidente'];
         _categoria = args['categoria'] ?? 'Batería';
         _urgencia = args['urgencia'] ?? 'Alta';
+
+        _idCliente = args['idCliente'];
+        _idVehiculo = args['idVehiculo'];
+        _latitud = args['latitud'];
+        _longitud = args['longitud'];
+        _descripcion = args['descripcion'];
+        _audioPath = args['audioPath'];
+        _fotoPath = args['fotoPath'];
       }
       _argsLoaded = true;
+      _startRealFlow();
     }
   }
 
   void _startRealFlow() async {
-    // 1. Diagnóstico de IA
-    await Future.delayed(const Duration(seconds: 2));
+    // 1. Diagnóstico de IA - Ejecución en segundo plano
+    if (_idIncidente == null && _idCliente != null) {
+      try {
+        final response = await _apiService.reportarIncidente(
+          idCliente: _idCliente!,
+          idVehiculo: _idVehiculo!,
+          latitud: _latitud!,
+          longitud: _longitud!,
+          descripcion: _descripcion ?? '',
+          audioPath: _audioPath,
+          fotoPath: _fotoPath,
+        );
+        if (response.data is Map) {
+          _idIncidente = response.data['id_incidente'];
+          if (response.data['evaluacion_ia'] is Map) {
+            _categoria = response.data['evaluacion_ia']['categoria'] ?? _categoria;
+            _urgencia = response.data['evaluacion_ia']['urgencia'] ?? _urgencia;
+          }
+        }
+      } catch (e) {
+        debugPrint("Error reportando incidente: $e");
+        _idIncidente = 1; // Fallback para que no se detenga la simulación del examen
+      }
+    }
+
+    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       setState(() {
         _status = "Diagnóstico: Problema de $_categoria detectado.\nPrioridad asignada: $_urgencia";
@@ -60,7 +100,7 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
     }
 
     // 2. Búsqueda de Talleres
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       setState(() {
         _status = "Contactando al especialista más rápido...";

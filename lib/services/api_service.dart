@@ -145,6 +145,10 @@ class ApiService {
     return await _dio.get('/api/talleres/tecnicos/$idTecnico/trabajos');
   }
 
+  Future<Response> getTecnicoPerfil(int idTecnico) async {
+    return await _dio.get('/api/talleres/tecnicos/$idTecnico');
+  }
+
   Future<Response> actualizarUbicacionTecnico(int idTecnico, double lat, double lng) async {
     return await _dio.post('/api/talleres/tecnicos/$idTecnico/ubicacion', data: {
       'latitud': lat,

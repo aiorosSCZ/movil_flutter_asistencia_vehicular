@@ -25,6 +25,14 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
   void initState() {
     super.initState();
     _fetchTrabajos();
+    _requestLocationPermissions();
+  }
+
+  Future<void> _requestLocationPermissions() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
     _startGpsTracking();
   }
 

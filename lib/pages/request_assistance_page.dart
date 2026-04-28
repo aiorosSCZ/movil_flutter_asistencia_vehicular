@@ -204,59 +204,30 @@ class _RequestAssistancePageState extends State<RequestAssistancePage> {
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppTheme.primaryBlue),
-      ),
-    );
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final idCliente = authProvider.user?.id;
 
     if (_selectedVehiculoId == null) {
-      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Debes registrar y seleccionar un vehículo.")),
       );
       return;
     }
 
-    try {
-      final response = await _apiService.reportarIncidente(
-        idCliente: idCliente!,
-        idVehiculo: _selectedVehiculoId!,
-        latitud: _latitude!,
-        longitud: _longitude!,
-        descripcion: _descriptionController.text,
-        audioPath: _audioPath,
-        fotoPath: _photoPath,
-      );
-
-      if (context.mounted) {
-        Navigator.pop(context);
-        Navigator.pushReplacementNamed(
-          context, 
-          '/searching',
-          arguments: {
-            'id_incidente': response.data is Map ? response.data['id_incidente'] : null,
-            'categoria': (response.data is Map && response.data['evaluacion_ia'] != null) ? response.data['evaluacion_ia']['categoria'] : 'Batería',
-            'urgencia': (response.data is Map && response.data['evaluacion_ia'] != null) ? response.data['evaluacion_ia']['urgencia'] : 'Alta',
-          },
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error al enviar solicitud: $e"),
-            backgroundColor: AppTheme.emergencyRed,
-          ),
-        );
-      }
-    }
+    Navigator.pushReplacementNamed(
+      context, 
+      '/searching',
+      arguments: {
+        'idCliente': idCliente,
+        'idVehiculo': _selectedVehiculoId,
+        'latitud': _latitude,
+        'longitud': _longitude,
+        'descripcion': _descriptionController.text,
+        'audioPath': _audioPath,
+        'fotoPath': _photoPath,
+      },
+    );
   }
 
   @override
