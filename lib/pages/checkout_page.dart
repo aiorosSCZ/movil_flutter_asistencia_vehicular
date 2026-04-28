@@ -49,7 +49,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     
     try {
       await http.post(
-        Uri.parse('http://10.0.2.2:8000/api/pagos/crear-intento'),
+        Uri.parse('https://backend-fastapi-su7t.onrender.com/api/pagos/crear-intento'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'id_incidente': _idIncidente ?? 1,

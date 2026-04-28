@@ -70,7 +70,8 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
       final response = await _apiService.getTecnicoTrabajos(widget.idTecnico);
       if (response.statusCode == 200) {
         setState(() {
-          _trabajos = List<Map<String, dynamic>>.from(response.data);
+          final allJobs = List<Map<String, dynamic>>.from(response.data);
+          _trabajos = allJobs.where((job) => job["estado"] != "Completado" && job["estado"] != "Finalizado" && job["estado"] != "Cancelado").toList();
           _isLoading = false;
         });
       }

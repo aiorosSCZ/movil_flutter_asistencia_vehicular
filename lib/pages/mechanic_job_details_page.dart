@@ -71,11 +71,11 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
   void _updateState(int? idIncidente) async {
     String nuevoEstado = "Asignado";
     if (_currentState == "Asignado") {
-      nuevoEstado = "En camino";
-    } else if (_currentState == "En camino") {
-      nuevoEstado = "Atendiendo";
-    } else if (_currentState == "Atendiendo") {
-      nuevoEstado = "Finalizado";
+      nuevoEstado = "En Camino";
+    } else if (_currentState == "En Camino" || _currentState == "En camino") {
+      nuevoEstado = "Atendido";
+    } else if (_currentState == "Atendido") {
+      nuevoEstado = "Completado";
     }
 
     try {
@@ -90,7 +90,7 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
       _currentState = nuevoEstado;
     });
 
-    if (_currentState == "Finalizado") {
+    if (_currentState == "Completado") {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Servicio finalizado exitosamente."),
@@ -236,11 +236,11 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
     IconData icon = Icons.directions_car_rounded;
     Color btnColor = AppTheme.primaryBlue;
 
-    if (_currentState == "En camino") {
+    if (_currentState == "En Camino" || _currentState == "En camino") {
       label = "Llegué / Atendiendo";
       icon = Icons.build_circle_rounded;
       btnColor = AppTheme.accentYellow;
-    } else if (_currentState == "Atendiendo") {
+    } else if (_currentState == "Atendido" || _currentState == "Atendiendo") {
       label = "Finalizar Servicio";
       icon = Icons.check_circle_rounded;
       btnColor = AppTheme.secondaryGreen;

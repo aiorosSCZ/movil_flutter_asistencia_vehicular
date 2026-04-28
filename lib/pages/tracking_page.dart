@@ -80,6 +80,15 @@ class _TrackingPageState extends State<TrackingPage> {
               );
             });
             _loadTrackData();
+            
+            if (_estadoSolicitud == 'Completado') {
+              _pollingTimer?.cancel();
+              Navigator.pushReplacementNamed(
+                context, 
+                '/checkout',
+                arguments: {'id_incidente': _idIncidente},
+              );
+            }
           }
         }
       } catch (e) {
