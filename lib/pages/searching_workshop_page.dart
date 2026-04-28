@@ -91,7 +91,7 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
       }
     }
 
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 4));
     if (mounted) {
       setState(() {
         _status = "Diagnóstico: Problema de $_categoria detectado.\nPrioridad asignada: $_urgencia";
@@ -99,20 +99,19 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
       });
     }
 
-    // 2. Búsqueda de Talleres
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 4));
+    
+    // Pasar INMEDIATAMENTE a la pantalla del mapa (Tracking)
     if (mounted) {
-      setState(() {
-        _status = "Contactando al especialista más rápido...";
-        _step = 2;
-      });
+      Navigator.pushReplacementNamed(
+        context, 
+        '/tracking',
+        arguments: {'id_incidente': _idIncidente},
+      );
     }
-
-    // 3. Polling Real del Estado del Incidente
-    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      _checkIncidentStatus();
-    });
   }
+
+
 
   Future<void> _checkIncidentStatus() async {
     if (_idIncidente == null) return;

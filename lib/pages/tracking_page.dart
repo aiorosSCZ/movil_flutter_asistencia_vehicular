@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import '../theme.dart';
 
@@ -112,14 +113,67 @@ class _TrackingPageState extends State<TrackingPage> {
         ),
       );
 
-      _polylines.add(
-        Polyline(
-          polylineId: const PolylineId('route'),
-          points: [_currentPosition, _technicianPosition],
-          color: AppTheme.primaryBlue,
-          width: 5,
+      _getPolyline();
+    }
+  }
+
+  void _getPolyline() async {
+    PolylinePoints polylinePoints = PolylinePoints();
+    
+    try {
+      PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+        googleApiKey: "AIzaSyBvOa8qmBZdPumYKJnBtfxa57AJLE1YFxE",
+        request: PolylineRequest(
+          origin: PointLatLng(_technicianPosition.latitude, _technicianPosition.longitude),
+          destination: PointLatLng(_currentPosition.latitude, _currentPosition.longitude),
+          mode: TravelMode.driving,
         ),
       );
+
+      if (result.points.isNotEmpty) {
+        List<LatLng> polylineCoordinates = [];
+        for (var point in result.points) {
+          polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+        }
+        if (mounted) {
+          setState(() {
+            _polylines.add(
+              Polyline(
+                polylineId: const PolylineId('route'),
+                points: polylineCoordinates,
+                color: AppTheme.primaryBlue,
+                width: 5,
+              ),
+            );
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _polylines.add(
+              Polyline(
+                polylineId: const PolylineId('route'),
+                points: [_currentPosition, _technicianPosition],
+                color: AppTheme.primaryBlue,
+                width: 5,
+              ),
+            );
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _polylines.add(
+            Polyline(
+              polylineId: const PolylineId('route'),
+              points: [_currentPosition, _technicianPosition],
+              color: AppTheme.primaryBlue,
+              width: 5,
+            ),
+          );
+        });
+      }
     }
   }
 
