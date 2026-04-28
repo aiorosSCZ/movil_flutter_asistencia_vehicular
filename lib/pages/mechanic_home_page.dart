@@ -259,7 +259,7 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
                                     children: [
                                       const Icon(Icons.location_on_rounded, size: 16, color: AppTheme.secondaryGreen),
                                       const SizedBox(width: 4),
-                                      Text(job["distancia"], style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
+                                      Text(job["distancia"] ?? "En ruta", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13)),
                                     ],
                                   ),
                                   ElevatedButton(
