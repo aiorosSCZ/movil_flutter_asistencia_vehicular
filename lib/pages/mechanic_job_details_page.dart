@@ -69,14 +69,42 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
   }
 
   void _updateState(int? idIncidente) async {
+    if (_currentState == "Por Pagar") {
+      // Validar si el cliente ya pagó
+      try {
+        if (idIncidente != null) {
+          final trackResp = await _apiService.getIncidenteTracking(idIncidente);
+          if (trackResp.statusCode == 200) {
+            final data = trackResp.data;
+            bool pagoHecho = data['pago_completado'] ?? false;
+            if (!pagoHecho) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("⚠️ Pago Pendiente: El cliente aún no ha pagado. Pídele que realice el pago en su app móvil."),
+                  backgroundColor: Colors.orangeAccent,
+                )
+              );
+              return; // Bloquear la finalización
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Error validando pago: $e");
+      }
+    }
+
     String nuevoEstado = "Asignado";
     if (_currentState == "Asignado") {
       nuevoEstado = "En Camino";
     } else if (_currentState == "En Camino" || _currentState == "En camino") {
       nuevoEstado = "Atendido";
     } else if (_currentState == "Atendido") {
+      nuevoEstado = "Por Pagar";
+    } else if (_currentState == "Por Pagar") {
       nuevoEstado = "Completado";
     }
+
+
 
     try {
       if (idIncidente != null) {
@@ -241,10 +269,15 @@ class _MechanicJobDetailsPageState extends State<MechanicJobDetailsPage> {
       icon = Icons.build_circle_rounded;
       btnColor = AppTheme.accentYellow;
     } else if (_currentState == "Atendido" || _currentState == "Atendiendo") {
+      label = "Solicitar Pago";
+      icon = Icons.payment_rounded;
+      btnColor = Colors.teal;
+    } else if (_currentState == "Por Pagar") {
       label = "Finalizar Servicio";
       icon = Icons.check_circle_rounded;
       btnColor = AppTheme.secondaryGreen;
     }
+
 
     final Map<String, dynamic>? args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final int? idIncInt = args?['id_incidente'];

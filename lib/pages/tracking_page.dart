@@ -26,8 +26,12 @@ class _TrackingPageState extends State<TrackingPage> {
   Timer? _pollingTimer;
   int? _idIncidente;
   bool _argsLoaded = false;
-  String _estadoSolicitud = "Aceptado";
+  String _estadoSolicitud = "Pendiente";
+  String? _tipoProblema;
+  String? _nivelPrioridad;
+  String? _diagnosticoIA;
   final ApiService _apiService = ApiService();
+
 
   @override
   void initState() {
@@ -69,7 +73,10 @@ class _TrackingPageState extends State<TrackingPage> {
           final data = response.data;
           if (mounted) {
             setState(() {
-              _estadoSolicitud = data['estado'] ?? 'Aceptado';
+              _estadoSolicitud = data['estado'] ?? 'Pendiente';
+              _tipoProblema = data['tipo_problema'];
+              _nivelPrioridad = data['nivel_prioridad'];
+              _diagnosticoIA = data['diagnostico_ia'];
               _currentPosition = LatLng(
                 data['lat_cliente'] ?? _currentPosition.latitude,
                 data['lng_cliente'] ?? _currentPosition.longitude,
@@ -79,9 +86,10 @@ class _TrackingPageState extends State<TrackingPage> {
                 data['lng_tecnico'] ?? _technicianPosition.longitude,
               );
             });
+
             _loadTrackData();
             
-            if (_estadoSolicitud == 'Completado') {
+            if (_estadoSolicitud == 'Por Pagar') {
               _pollingTimer?.cancel();
               Navigator.pushReplacementNamed(
                 context, 
@@ -89,6 +97,12 @@ class _TrackingPageState extends State<TrackingPage> {
                 arguments: {'id_incidente': _idIncidente},
               );
             }
+
+            if (_estadoSolicitud == 'Completado') {
+              _pollingTimer?.cancel();
+              _showAsistenciaRealizadaDialog();
+            }
+
           }
         }
       } catch (e) {
@@ -97,7 +111,54 @@ class _TrackingPageState extends State<TrackingPage> {
     }
   }
 
+  void _showAsistenciaRealizadaDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "¡Asistencia Realizada!",
+          textAlign: TextAlign.center,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              "Muchas gracias por confiar en nosotros. Tu vehículo está listo.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textDark),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pushReplacementNamed(
+                  context, 
+                  '/rating',
+                  arguments: {'id_incidente': _idIncidente},
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryBlue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Calificar Servicio"),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   void _loadTrackData() {
+
     _markers.clear();
     _polylines.clear();
 
@@ -327,8 +388,38 @@ class _TrackingPageState extends State<TrackingPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+                        if (_diagnosticoIA != null)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryBlue.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.1)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.auto_awesome_rounded, color: AppTheme.primaryBlue, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Diagnóstico IA (${_tipoProblema ?? 'Procesando'})",
+                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _diagnosticoIA!,
+                                  style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textGray, fontStyle: FontStyle.italic),
+                                ),
+                              ],
+                            ),
+                          ),
                         Container(
+
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -340,19 +431,36 @@ class _TrackingPageState extends State<TrackingPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFFBEB),
+                                color: _estadoSolicitud == 'Pendiente' 
+                                  ? Colors.blue.withOpacity(0.1)
+                                  : (_estadoSolicitud == 'Completado' 
+                                      ? Colors.green.withOpacity(0.1) 
+                                      : const Color(0xFFFFFBEB)),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                "En Atención",
+                                _estadoSolicitud == 'Pendiente'
+                                    ? "Buscando Taller..."
+                                    : (_estadoSolicitud == 'Aceptado'
+                                        ? "Taller Asignado"
+                                        : (_estadoSolicitud == 'En Camino'
+                                            ? "Mecánico en Camino"
+                                            : (_estadoSolicitud == 'Atendido'
+                                                ? "En Atención"
+                                                : "Finalizado"))),
                                 style: GoogleFonts.inter(
-                                  color: AppTheme.accentYellow,
+                                  color: _estadoSolicitud == 'Pendiente'
+                                      ? Colors.blue
+                                      : (_estadoSolicitud == 'Completado'
+                                          ? Colors.green
+                                          : AppTheme.accentYellow),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 ),
                               ),
                             ),
                           ),
+
                           const SizedBox(height: 24),
                           
                           Stack(
@@ -364,15 +472,21 @@ class _TrackingPageState extends State<TrackingPage> {
                               ),
                               Container(
                                 height: 6,
-                                width: MediaQuery.of(context).size.width * 0.5,
+                                width: MediaQuery.of(context).size.width * 
+                                  (_estadoSolicitud == 'Pendiente' ? 0.2 : 
+                                  (_estadoSolicitud == 'Aceptado' ? 0.4 : 
+                                  (_estadoSolicitud == 'En Camino' ? 0.6 : 
+                                  (_estadoSolicitud == 'Atendido' ? 0.8 : 1.0)))),
                                 decoration: BoxDecoration(color: AppTheme.primaryBlue, borderRadius: BorderRadius.circular(3)),
                               ),
+
                             ],
                           ),
                           const SizedBox(height: 32),
                           
-                          _buildStep(Icons.check_rounded, "Buscando taller", true, true, false),
-                          _buildStep(Icons.check_rounded, "Taller asignado", _estadoSolicitud == 'Aceptado' || _estadoSolicitud == 'En Camino' || _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', true, false),
+                          _buildStep(Icons.check_rounded, "Buscando taller", true, true, _estadoSolicitud == 'Pendiente'),
+                          _buildStep(Icons.check_rounded, "Taller asignado", _estadoSolicitud == 'Aceptado' || _estadoSolicitud == 'En Camino' || _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', true, _estadoSolicitud == 'Aceptado'),
+
                           _buildStep(Icons.check_rounded, "En camino", _estadoSolicitud == 'En Camino' || _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', _estadoSolicitud == 'En Camino', false),
                           _buildStep(Icons.build_circle_rounded, "En atención", _estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado', _estadoSolicitud == 'Atendido', _estadoSolicitud == 'Atendido'),
                           _buildStep(Icons.star_rounded, "Finalizada", _estadoSolicitud == 'Completado', _estadoSolicitud == 'Completado', _estadoSolicitud == 'Completado'),
@@ -421,7 +535,7 @@ class _TrackingPageState extends State<TrackingPage> {
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
-                            onPressed: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                            onPressed: (_estadoSolicitud == 'Por Pagar' || _estadoSolicitud == 'Completado') 
                               ? () => Navigator.pushReplacementNamed(
                                   context, 
                                   '/checkout', 
@@ -429,19 +543,21 @@ class _TrackingPageState extends State<TrackingPage> {
                                 )
                               : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                              backgroundColor: (_estadoSolicitud == 'Por Pagar' || _estadoSolicitud == 'Completado') 
                                 ? AppTheme.primaryBlue 
                                 : Colors.grey.shade200,
-                              foregroundColor: (_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
+                              foregroundColor: (_estadoSolicitud == 'Por Pagar' || _estadoSolicitud == 'Completado') 
                                 ? Colors.white 
                                 : Colors.grey.shade500,
                               elevation: 0,
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             ),
-                            child: Text((_estadoSolicitud == 'Atendido' || _estadoSolicitud == 'Completado') 
-                              ? "Proceder al Pago (\$50.00)" 
-                              : "Esperando asistencia..."),
+                            child: Text((_estadoSolicitud == 'Por Pagar' || _estadoSolicitud == 'Completado') 
+                              ? "Proceder al Pago" 
+                              : (_estadoSolicitud == 'Atendido' ? "Técnico trabajando..." : "Esperando asistencia...")),
+
+
                           ),
                         ],
                       ),

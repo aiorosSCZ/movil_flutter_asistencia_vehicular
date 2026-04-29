@@ -91,16 +91,15 @@ class _SearchingWorkshopPageState extends State<SearchingWorkshopPage> {
       }
     }
 
-    if (mounted) {
-      setState(() {
-        _status = "Diagnóstico: Problema de $_categoria detectado.\nPrioridad asignada: $_urgencia\n\nBuscando y notificando talleres cercanos...";
-        _step = 1;
-      });
+    if (mounted && _idIncidente != null) {
+      Navigator.pushReplacementNamed(
+        context, 
+        '/tracking',
+        arguments: {'id_incidente': _idIncidente},
+      );
     }
-
-    // Iniciar el polling para esperar a que un taller acepte la solicitud
-    _startPolling();
   }
+
 
   void _startPolling() {
     _pollingTimer?.cancel();

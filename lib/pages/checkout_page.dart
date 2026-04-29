@@ -19,6 +19,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   bool _isProcessing = false;
   bool _argsLoaded = false;
   int? _idIncidente;
+  
+  String _tipoProblema = "Auxilio Vial";
+  String _tallerNombre = "Taller Asignado";
+  double _montoPago = 50.0;
 
   @override
   void didChangeDependencies() {
@@ -27,10 +31,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         _idIncidente = args['id_incidente'];
+        _fetchIncidenteDetalles();
       }
       _argsLoaded = true;
     }
   }
+
+  Future<void> _fetchIncidenteDetalles() async {
+    if (_idIncidente == null) return;
+    try {
+      final response = await http.get(Uri.parse('https://backend-fastapi-su7t.onrender.com/api/incidentes/$_idIncidente/tracking'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _tipoProblema = data['tipo_problema'] ?? "Auxilio Vial";
+            _tallerNombre = data['taller_nombre'] ?? "Taller AsistAuto";
+            _montoPago = (data['monto_pago'] != null) ? (data['monto_pago'] as num).toDouble() : 50.0;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error cargando detalles de cobro: $e");
+    }
+  }
+
 
   void _processPayment() async {
     if (_cardNumber.text.trim().length < 16 || 
@@ -71,8 +96,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
       );
       Navigator.pushReplacementNamed(
         context, 
-        '/rating',
+        '/tracking',
         arguments: {'id_incidente': _idIncidente ?? 1},
+
       );
     }
   }
@@ -108,10 +134,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   Text("Total a Pagar", style: GoogleFonts.inter(color: Colors.white70, fontSize: 16)),
                   const SizedBox(height: 8),
-                  Text("\$50.00", style: GoogleFonts.outfit(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                  Text("\$${_montoPago.toStringAsFixed(2)}", style: GoogleFonts.outfit(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
-                  Text("Servicio: Taller Mecánico El Rápido", style: GoogleFonts.inter(color: Colors.white, fontSize: 13)),
-                  Text("Diagnóstico y Reparación de Batería", style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                  Text("Servicio: $_tallerNombre", style: GoogleFonts.inter(color: Colors.white, fontSize: 13)),
+                  Text(_tipoProblema, style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+
                 ],
               ),
             ),
