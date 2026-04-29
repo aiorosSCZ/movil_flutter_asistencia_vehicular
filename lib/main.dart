@@ -18,6 +18,7 @@ import 'pages/mechanic_home_page.dart';
 import 'pages/mechanic_job_details_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'theme.dart';
 
 @pragma('vm:entry-point')
@@ -27,6 +28,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,26 +48,30 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
+  // Inicializar Notificaciones Locales
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(settings: initializationSettings);
+
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     if (message.notification != null) {
-      final context = navigatorKey.currentContext;
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${message.notification!.title}: ${message.notification!.body}'),
-            backgroundColor: AppTheme.secondaryGreen,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Ver',
-              textColor: Colors.white,
-              onPressed: () {
-                // Opcional: Navegar o hacer alguna acción
-              },
-            ),
+      // Mostrar notificación tipo banner (Sistema)
+      flutterLocalNotificationsPlugin.show(
+        id: message.notification.hashCode,
+        title: message.notification!.title,
+        body: message.notification!.body,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'asistcar_channel', 
+            'AsistCar Notifications',
+            channelDescription: 'Notificaciones importantes de AsistCar',
+            importance: Importance.max,
+            priority: Priority.high,
+            showWhen: true,
+            icon: '@mipmap/ic_launcher',
           ),
-        );
-      }
+        ),
+      );
     }
   });
   
