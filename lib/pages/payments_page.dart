@@ -82,28 +82,50 @@ class _PaymentsPageState extends State<PaymentsPage> {
               itemCount: _pagos.length,
               itemBuilder: (context, index) {
                 final p = _pagos[index];
+                final bool isPending = p['estado'] == 'Pendiente';
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   child: ListTile(
-                    leading: const Icon(Icons.payment_rounded, color: AppTheme.secondaryGreen, size: 36),
-                    title: Text("\$${p['monto']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
-                    subtitle: Text("${p['taller']} • ${p['fecha']}"),
+                    onTap: () {
+                      if (isPending && p['id_incidente'] != null) {
+                        Navigator.pushNamed(
+                          context, 
+                          '/checkout', 
+                          arguments: {'id_incidente': p['id_incidente']}
+                        ).then((_) => _fetchPagos());
+                      }
+                    },
+                    leading: Icon(
+                      Icons.payment_rounded, 
+                      color: isPending ? AppTheme.accentYellow : AppTheme.secondaryGreen, 
+                      size: 36
+                    ),
+                    title: Text("Bs. ${p['monto']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+                    subtitle: Text("🔧 ${p['problema'] ?? 'Avería'} • ${p['taller']}\n📅 ${p['fecha']}"),
+                    isThreeLine: true,
                     trailing: Container(
+
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryGreen.withOpacity(0.2),
+                        color: (isPending ? AppTheme.accentYellow : AppTheme.secondaryGreen).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20)
                       ),
                       child: Text(
                         p['estado'] ?? 'Completado', 
-                        style: GoogleFonts.inter(color: AppTheme.secondaryGreen, fontWeight: FontWeight.bold, fontSize: 12)
+                        style: GoogleFonts.inter(
+                          color: isPending ? const Color(0xFFB45309) : AppTheme.secondaryGreen, 
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 12
+                        )
                       ),
                     ),
                   ),
                 );
               },
             ),
+
     );
   }
 }

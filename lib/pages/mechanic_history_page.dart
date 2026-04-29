@@ -1,57 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 
 class MechanicHistoryPage extends StatefulWidget {
-  const MechanicHistoryPage({super.key});
+  final int idTecnico;
+  const MechanicHistoryPage({super.key, required this.idTecnico});
 
   @override
   State<MechanicHistoryPage> createState() => _MechanicHistoryPageState();
 }
 
 class _MechanicHistoryPageState extends State<MechanicHistoryPage> {
-  // Datos simulados de historial para el técnico
-  final List<Map<String, dynamic>> _history = [
-    {
-      "id": 1,
-      "cliente": "Juan Perez",
-      "servicio": "Cambio de llanta",
-      "fecha": "25 Abr 2026",
-      "monto": 150.00,
-      "estado_pago": "Pagado con Stripe",
-      "tipo": "Llantas"
-    },
-    {
-      "id": 2,
-      "cliente": "Maria Gomez",
-      "servicio": "Recarga de batería",
-      "fecha": "23 Abr 2026",
-      "monto": 80.00,
-      "estado_pago": "Pagado con Stripe",
-      "tipo": "Eléctrico"
-    },
-    {
-      "id": 3,
-      "cliente": "Carlos Sosa",
-      "servicio": "Revisión de frenos",
-      "fecha": "20 Abr 2026",
-      "monto": 220.00,
-      "estado_pago": "Pagado con Stripe",
-      "tipo": "Frenos"
-    },
-  ];
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> _history = [];
+  bool _isLoading = true;
 
-  Color _getCategoryColor(String type) {
-    switch (type) {
-      case 'Llantas':
-        return Colors.orange.shade700;
-      case 'Eléctrico':
-        return Colors.blue.shade700;
-      case 'Frenos':
-        return Colors.red.shade700;
-      default:
-        return AppTheme.primaryBlue;
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistorial();
+  }
+
+  Future<void> _fetchHistorial() async {
+    try {
+      final response = await _apiService.getTecnicoTrabajos(widget.idTecnico);
+      if (response.statusCode == 200) {
+        final List<Map<String, dynamic>> allJobs = List<Map<String, dynamic>>.from(response.data);
+        
+        setState(() {
+          _history = allJobs
+              .where((job) => job["estado"] == "Completado" || job["estado"] == "Finalizado")
+              .toList()
+              .reversed
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
     }
+  }
+
+  Color _getCategoryColor(String? type) {
+    if (type == null) return AppTheme.primaryBlue;
+    if (type.contains('Llantas') || type.contains('Neumático')) return Colors.orange.shade700;
+    if (type.contains('Batería') || type.contains('Eléctrico')) return Colors.blue.shade700;
+    if (type.contains('Frenos') || type.contains('Mecánica')) return Colors.red.shade700;
+    return AppTheme.primaryBlue;
   }
 
   @override
@@ -64,40 +60,44 @@ class _MechanicHistoryPageState extends State<MechanicHistoryPage> {
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
       ),
-      body: _history.isEmpty
-          ? Center(
-              child: Text(
-                "No tienes servicios completados aún.",
-                style: GoogleFonts.inter(color: AppTheme.textGray, fontSize: 16),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(24.0),
-              itemCount: _history.length,
-              itemBuilder: (context, index) {
-                final item = _history[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue))
+          : _history.isEmpty
+              ? Center(
+                  child: Text(
+                    "No tienes servicios completados aún.",
+                    style: GoogleFonts.inter(color: AppTheme.textGray, fontSize: 16),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(item['tipo']).withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(24.0),
+                  itemCount: _history.length,
+                  itemBuilder: (context, index) {
+                    final item = _history[index];
+                    final String problemType = item['problema'] ?? 'Asistencia';
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _getCategoryColor(problemType).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+
                         child: Icon(
                           Icons.build_circle_rounded,
                           color: _getCategoryColor(item['tipo']),

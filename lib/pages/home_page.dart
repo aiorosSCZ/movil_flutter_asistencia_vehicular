@@ -2,10 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import '../theme.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _vehiculosCount = 0;
+  String _ultimoServicio = '--';
+  String _subtitleServicio = 'Sin servicios';
+  bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final idCliente = authProvider.user?.id;
+    if (idCliente == null) return;
+
+    try {
+      final api = ApiService();
+      
+      // 1. Cargar Vehículos
+      final resVehiculos = await api.getVehiculos(idCliente);
+      if (resVehiculos.statusCode == 200 && resVehiculos.data != null) {
+        final List list = resVehiculos.data;
+        _vehiculosCount = list.length;
+      }
+
+      // 2. Cargar Historial
+      final resHistorial = await api.getHistorialPagos(idCliente);
+      if (resHistorial.statusCode == 200 && resHistorial.data != null) {
+        final List list = resHistorial.data;
+        if (list.isNotEmpty) {
+          final last = list.last; // El más reciente suele ser el último en añadirse
+          _ultimoServicio = "Bs. ${last['monto_total_cliente'] ?? '0'}";
+          _subtitleServicio = last['fecha_pago'] != null 
+            ? "Pagado el ${last['fecha_pago'].toString().substring(0, 10)}" 
+            : "Asistencia exitosa";
+        }
+      }
+    } catch (e) {
+      debugPrint("Error cargando estadísticas de cliente: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +70,9 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.bgLight,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue))
+        : SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +234,7 @@ class HomePage extends StatelessWidget {
                       icon: Icons.directions_car_rounded,
                       iconColor: AppTheme.accentYellow,
                       title: "Vehículos Activos",
-                      value: "0",
+                      value: _vehiculosCount.toString(),
                       subtitle: "Registrados",
                     ),
                   ),
@@ -187,8 +244,8 @@ class HomePage extends StatelessWidget {
                       icon: Icons.history_rounded,
                       iconColor: AppTheme.secondaryGreen,
                       title: "Último servicio",
-                      value: "--",
-                      subtitle: "Sin historial de servicios",
+                      value: _ultimoServicio,
+                      subtitle: _subtitleServicio,
                     ),
                   ),
                 ],
@@ -202,6 +259,7 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildSubCard({
+
     required IconData icon,
     required Color iconColor,
     required String title,

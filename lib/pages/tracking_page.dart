@@ -30,7 +30,9 @@ class _TrackingPageState extends State<TrackingPage> {
   String? _tipoProblema;
   String? _nivelPrioridad;
   String? _diagnosticoIA;
+  String _tallerNombre = "Buscando taller...";
   final ApiService _apiService = ApiService();
+
 
 
   @override
@@ -77,6 +79,7 @@ class _TrackingPageState extends State<TrackingPage> {
               _tipoProblema = data['tipo_problema'];
               _nivelPrioridad = data['nivel_prioridad'];
               _diagnosticoIA = data['diagnostico_ia'];
+              _tallerNombre = data['taller_nombre'] ?? 'Taller AsistAuto';
               _currentPosition = LatLng(
                 data['lat_cliente'] ?? _currentPosition.latitude,
                 data['lng_cliente'] ?? _currentPosition.longitude,
@@ -86,6 +89,7 @@ class _TrackingPageState extends State<TrackingPage> {
                 data['lng_tecnico'] ?? _technicianPosition.longitude,
               );
             });
+
 
             _loadTrackData();
             
@@ -520,7 +524,8 @@ class _TrackingPageState extends State<TrackingPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Taller Mecánico El Rápido", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                                    Text(_tallerNombre, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+
                                     Text("A 1.5 km de tu posición", style: GoogleFonts.inter(color: AppTheme.textGray, fontSize: 12)),
                                   ],
                                 ),

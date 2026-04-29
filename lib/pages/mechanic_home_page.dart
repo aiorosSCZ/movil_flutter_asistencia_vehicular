@@ -105,10 +105,21 @@ class _MechanicHomePageState extends State<MechanicHomePage> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primaryBlue),
+            tooltip: "Actualizar servicios",
+            onPressed: () {
+              setState(() {
+                _isLoading = true;
+              });
+              _fetchTrabajos();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout_rounded),
             onPressed: () => Navigator.pushReplacementNamed(context, '/'),
           )
         ],
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
