@@ -50,6 +50,7 @@ class _TrackingPageState extends State<TrackingPage> {
       final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       if (args != null) {
         _idIncidente = args['id_incidente'];
+        _fetchTechnicianLocation();
       }
       _argsLoaded = true;
     }
