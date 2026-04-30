@@ -45,9 +45,9 @@ class _HomePageState extends State<HomePage> {
         final List list = resHistorial.data;
         if (list.isNotEmpty) {
           final last = list.last; // El más reciente suele ser el último en añadirse
-          _ultimoServicio = "Bs. ${last['monto_total_cliente'] ?? '0'}";
-          _subtitleServicio = last['fecha_pago'] != null 
-            ? "Pagado el ${last['fecha_pago'].toString().substring(0, 10)}" 
+          _ultimoServicio = "Bs. ${last['monto'] ?? '0'}";
+          _subtitleServicio = last['fecha'] != null 
+            ? "Pagado el ${last['fecha'].toString().substring(0, 10)}" 
             : "Asistencia exitosa";
         }
       }
