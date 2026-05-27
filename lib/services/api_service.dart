@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../config/api_config.dart';
 
 class ApiService {
   final Dio _dio = Dio(BaseOptions(
-    // URL Local para pruebas en Wi-Fi o Emulador
-    baseUrl: 'https://backend-fastapi-su7t.onrender.com', 
-    // URL de producción final en Render: 'https://backend-fastapi-su7t.onrender.com',
+    baseUrl: ApiConfig.baseUrl, 
     connectTimeout: const Duration(seconds: 45),
     receiveTimeout: const Duration(seconds: 45),
   ));

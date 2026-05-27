@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../theme.dart';
+import '../config/api_config.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -40,7 +41,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Future<void> _fetchIncidenteDetalles() async {
     if (_idIncidente == null) return;
     try {
-      final response = await http.get(Uri.parse('https://backend-fastapi-su7t.onrender.com/api/incidentes/$_idIncidente/tracking'));
+      final response = await http.get(Uri.parse('${ApiConfig.baseUrl}/api/incidentes/$_idIncidente/tracking'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) {
@@ -74,7 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     
     try {
       await http.post(
-        Uri.parse('https://backend-fastapi-su7t.onrender.com/api/pagos/crear-intento'),
+        Uri.parse('${ApiConfig.baseUrl}/api/pagos/crear-intento'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'id_incidente': _idIncidente ?? 1,
